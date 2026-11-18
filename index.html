@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F1F4F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1318" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Thoughts">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>Thought Record</title>
+<style>
+:root {
+  /* Layout: one phone-width column. Every record keeps the five areas
+     (Situation, Physical feelings, Thoughts, Emotions, Behaviours) as labelled rows;
+     the person's own words are set in the serif. */
+  --paper: #F1F4F6;
+  --surface: #FFFFFF;
+  --ink: #16212C;
+  --muted: #56636F;
+  --rule: #D9E0E6;
+  --accent: #1C6A6D;
+  --accent-soft: #DCECEC;
+  --accent-ink: #FFFFFF;
+  --track: #E3E8EC;
+  --danger: #A4372D;
+  --warn-soft: #F7E4E1;
+  --shadow: rgba(22, 33, 44, 0.08);
+  --font-display: ui-serif, "New York", "Iowan Old Style", Palatino, Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0D1318;
+    --surface: #161F27;
+    --ink: #E3E9EE;
+    --muted: #98A6B2;
+    --rule: #27323C;
+    --accent: #62C2BF;
+    --accent-soft: #173A3B;
+    --accent-ink: #062022;
+    --track: #1D2730;
+    --danger: #EF8B81;
+    --warn-soft: #3A2220;
+    --shadow: rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0D1318;
+  --surface: #161F27;
+  --ink: #E3E9EE;
+  --muted: #98A6B2;
+  --rule: #27323C;
+  --accent: #62C2BF;
+  --accent-soft: #173A3B;
+  --accent-ink: #062022;
+  --track: #1D2730;
+  --danger: #EF8B81;
+  --warn-soft: #3A2220;
+  --shadow: rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--paper); }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.45 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+body.locked { overflow: hidden; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; -webkit-touch-callout: none; }
+.ico { display: inline-flex; flex: none; }
+.ico svg { display: block; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.wrap { max-width: 560px; margin: 0 auto; padding: 16px 18px calc(96px + env(safe-area-inset-bottom)); }
+.serif { font-family: var(--font-display); font-size: 17.5px; line-height: 1.45; }
+.thought { font-style: italic; }
+
+/* Buttons */
+.btn {
+  -webkit-appearance: none; appearance: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 50px; padding: 0 18px;
+  border: 1px solid transparent; border-radius: 13px;
+  font-size: 17px; font-weight: 600; line-height: 1.2;
+  cursor: pointer; touch-action: manipulation;
+  transition: transform 0.08s ease, background-color 0.15s ease, opacity 0.15s ease;
+}
+.btn:active { transform: scale(0.985); }
+.btn[disabled] { opacity: 0.45; pointer-events: none; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-ghost { background: var(--surface); color: var(--accent); border-color: var(--rule); }
+.btn-danger { background: var(--danger); color: var(--surface); }
+.btn-danger-ghost { background: var(--surface); color: var(--danger); border-color: var(--rule); }
+.btn-xl { width: 100%; min-height: 58px; font-size: 18px; border-radius: 15px; box-shadow: 0 6px 18px -8px var(--accent); }
+.btn-small { min-height: 42px; padding: 0 14px; font-size: 15px; border-radius: 11px; }
+.link-btn {
+  -webkit-appearance: none; appearance: none; background: none; border: 0;
+  display: inline-flex; align-items: center; gap: 2px;
+  min-height: 44px; padding: 8px 6px;
+  color: var(--accent); font-size: 17px; cursor: pointer; touch-action: manipulation;
+}
+.link-btn.strong { font-weight: 600; }
+.inline-link { -webkit-appearance: none; appearance: none; background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+
+/* Home */
+.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.home-head { padding: 14px 2px 20px; }
+.home-head h1 { font-family: var(--font-display); font-weight: 600; font-size: 34px; line-height: 1.08; letter-spacing: -0.01em; margin-top: 6px; }
+.lede { margin-top: 10px; color: var(--muted); font-size: 16px; max-width: 32em; }
+.home-actions { display: grid; gap: 10px; }
+.row-btn {
+  -webkit-appearance: none; appearance: none;
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  min-height: 64px; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 15px;
+  text-align: left; cursor: pointer; touch-action: manipulation;
+}
+.row-btn .lead-ico { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.row-btn-main { flex: 1; min-width: 0; }
+.row-btn-title { display: block; font-weight: 600; font-size: 16px; }
+.row-btn-sub { display: block; color: var(--muted); font-size: 14px; margin-top: 1px; }
+.row-btn .chev { color: var(--muted); }
+
+.notice { margin: 0 0 16px; padding: 14px 16px; border-radius: 15px; background: var(--accent-soft); }
+.notice-title { font-weight: 700; font-size: 16px; }
+.notice-text { margin-top: 4px; font-size: 15px; }
+.notice ol { margin: 8px 0 0; padding-left: 20px; font-size: 15px; }
+.notice li { margin: 3px 0; }
+.notice-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.notice-warn { background: var(--warn-soft); }
+.notice-warn .notice-title { color: var(--danger); }
+
+.banner { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-top: 12px; padding: 10px 12px 10px 14px; border-radius: 14px; background: var(--accent-soft); font-size: 15px; }
+.banner .grow { flex: 1 1 180px; }
+.banner .acts { display: flex; gap: 4px; margin-left: auto; }
+.banner .link-btn { font-size: 15px; font-weight: 600; min-height: 40px; padding: 6px 8px; }
+
+.group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 30px 4px 8px; }
+.group-title { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.group-count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.group { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 15px; overflow: hidden; }
+.group > li + li { border-top: 1px solid var(--rule); }
+.entry {
+  -webkit-appearance: none; appearance: none; display: block; width: 100%;
+  padding: 14px 16px 16px; background: none; border: 0; text-align: left; cursor: pointer; touch-action: manipulation;
+  transition: background-color 0.2s ease;
+}
+button.entry:active { background: var(--accent-soft); }
+.entry.flash { animation: flash 1.8s ease-out; }
+@keyframes flash { from { background: var(--accent-soft); } to { background: transparent; } }
+.entry-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.entry-date { font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; }
+.entry-top .chev { margin-left: auto; color: var(--muted); }
+.pill { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.entry-grid { display: grid; grid-template-columns: 86px minmax(0, 1fr); column-gap: 10px; row-gap: 8px; align-items: baseline; }
+.lbl { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.val { min-width: 0; overflow-wrap: anywhere; }
+.entry .serif { font-size: 16.5px; line-height: 1.4; }
+.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.empty-val { color: var(--muted); font-size: 15px; }
+.fchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fchip {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--rule); font-size: 14px;
+  background: linear-gradient(to right, var(--accent-soft) calc(var(--v, 0) * 100%), transparent 0);
+}
+.fchip b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.list-note { color: var(--muted); font-size: 15px; margin: 14px 4px 0; }
+.example .entry { cursor: default; }
+
+.panel { margin-top: 30px; background: var(--surface); border: 1px solid var(--rule); border-radius: 15px; padding: 14px 16px 16px; }
+.panel h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.panel p { margin-top: 6px; font-size: 15px; }
+.panel .muted { color: var(--muted); font-size: 14px; }
+.panel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.tips { margin-top: 12px; background: var(--surface); border: 1px solid var(--rule); border-radius: 15px; padding: 0 16px; }
+.tips summary { list-style: none; display: flex; align-items: center; justify-content: space-between; min-height: 52px; font-weight: 600; cursor: pointer; }
+.tips summary::-webkit-details-marker { display: none; }
+.tips summary .chev { color: var(--muted); transition: transform 0.2s ease; }
+.tips[open] summary .chev { transform: rotate(90deg); }
+.tips ul { margin: 0; padding: 0 0 16px 18px; }
+.tips li { margin: 8px 0; }
+.status { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 26px 8px 0; color: var(--muted); font-size: 13px; text-align: center; }
+
+/* Top bar (editor, detail) */
+.bar {
+  position: sticky; top: 0; z-index: 5;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  margin: -16px -18px 0; padding: 2px 10px;
+  background: var(--paper); border-bottom: 1px solid var(--rule);
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) and (background: color-mix(in srgb, red 50%, transparent)) {
+  .bar { background: color-mix(in srgb, var(--paper) 88%, transparent); -webkit-backdrop-filter: saturate(1.4) blur(14px); backdrop-filter: saturate(1.4) blur(14px); }
+}
+.bar > :first-child { justify-self: start; }
+.bar > :last-child { justify-self: end; }
+.bar-title { font-size: 17px; font-weight: 600; }
+
+/* Editor */
+.steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; padding: 4px; margin: 16px 0 20px; background: var(--track); border-radius: 14px; }
+.step {
+  -webkit-appearance: none; appearance: none; border: 0; background: transparent; border-radius: 10px;
+  display: grid; justify-items: center; align-content: center; gap: 3px;
+  min-height: 54px; padding: 6px 1px 5px; color: var(--muted); cursor: pointer; touch-action: manipulation;
+}
+.step.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px var(--shadow), 0 0 0 1px var(--rule); }
+.step-n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--rule); color: var(--ink); font-variant-numeric: tabular-nums; }
+.step.done .step-n { background: var(--accent-soft); color: var(--accent); }
+.step.on .step-n { background: var(--accent); color: var(--accent-ink); }
+.step-n svg { width: 12px; height: 12px; }
+.step-l { font-size: 11px; font-weight: 600; line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.step-eyebrow { margin: 0 2px 6px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.context { margin: -6px 2px 16px; font-size: 14px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.context b { color: var(--ink); font-weight: 600; }
+.q { font-family: var(--font-display); font-weight: 600; font-size: 27px; line-height: 1.15; letter-spacing: -0.005em; }
+.help { color: var(--muted); margin: 6px 0 18px; }
+.field-label { display: block; margin: 20px 2px 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.field-label .opt { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.field-note { margin: 6px 2px 0; font-size: 14px; color: var(--muted); }
+.input {
+  -webkit-appearance: none; appearance: none; display: block; width: 100%;
+  min-height: 50px; padding: 12px 14px;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 13px;
+  font: inherit; font-size: 17px;
+}
+.input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.input::placeholder { color: var(--muted); opacity: 0.8; }
+.textarea { resize: none; line-height: 1.45; min-height: 128px; overflow: hidden; }
+.textarea.serif { font-family: var(--font-display); font-size: 18px; }
+.textarea.short { min-height: 84px; }
+input[type="datetime-local"].input { text-align: left; }
+input[type="datetime-local"].input::-webkit-date-and-time-value { text-align: left; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  -webkit-appearance: none; appearance: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 42px; padding: 0 15px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 999px;
+  font-size: 16px; cursor: pointer; touch-action: manipulation;
+}
+.chip .ck { display: none; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; padding-left: 11px; }
+.chip[aria-pressed="true"] .ck { display: inline-flex; }
+.chip-add { color: var(--accent); border-style: dashed; font-weight: 600; }
+.add-own { display: flex; gap: 8px; margin-top: 12px; }
+.add-own .input { flex: 1; min-width: 0; }
+.add-own .btn { min-width: 80px; }
+.own-hint { margin: 8px 2px 0; font-size: 15px; }
+
+.ratings { display: grid; gap: 10px; margin-top: 20px; }
+.ratings-title { margin: 0 2px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.rating { background: var(--surface); border: 1px solid var(--rule); border-radius: 15px; padding: 10px 14px 8px; }
+.rating-head { display: flex; align-items: center; gap: 8px; }
+.rating-name { font-weight: 600; font-size: 17px; }
+.rating-val { margin-left: auto; font-family: var(--font-display); font-size: 28px; font-weight: 500; font-variant-numeric: tabular-nums lining-nums; line-height: 1; }
+.icon-btn {
+  -webkit-appearance: none; appearance: none; border: 0; background: transparent; color: var(--muted);
+  width: 40px; height: 40px; margin-right: -10px; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer; touch-action: manipulation;
+}
+.range {
+  -webkit-appearance: none; appearance: none; display: block; width: 100%;
+  height: 40px; margin: 2px 0 0; background: transparent; cursor: pointer; touch-action: pan-y;
+  --v: 0.5;
+}
+.range:focus { outline: none; }
+.range::-webkit-slider-runnable-track {
+  height: 10px; border-radius: 999px;
+  background: linear-gradient(to right, var(--accent) 0, var(--accent) calc(15px + (100% - 30px) * var(--v)), var(--track) calc(15px + (100% - 30px) * var(--v)), var(--track) 100%);
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 30px; height: 30px; margin-top: -10px; border-radius: 50%;
+  background: var(--surface); border: 2px solid var(--accent); box-shadow: 0 2px 5px var(--shadow);
+}
+.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 5px var(--accent-soft), 0 2px 5px var(--shadow); }
+.range::-moz-range-track { height: 10px; border-radius: 999px; background: var(--track); }
+.range::-moz-range-progress { height: 10px; border-radius: 999px; background: var(--accent); }
+.range::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); }
+.scale { display: flex; justify-content: space-between; padding: 0 9px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.tip { margin-top: 22px; padding: 12px 14px; border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 13px 13px 0; font-size: 15px; }
+.tip strong { display: block; margin-bottom: 2px; }
+
+.bubble { position: relative; margin-bottom: 38px; background: var(--surface); border: 1.5px solid var(--rule); border-radius: 28px; }
+.bubble::before, .bubble::after { content: ""; position: absolute; background: var(--surface); border: 1.5px solid var(--rule); border-radius: 50%; }
+.bubble::before { width: 17px; height: 17px; left: 30px; bottom: -24px; }
+.bubble::after { width: 10px; height: 10px; left: 16px; bottom: -37px; }
+.bubble:focus-within, .bubble:focus-within::before, .bubble:focus-within::after { border-color: var(--accent); }
+.bubble .textarea { border: 0; background: transparent; box-shadow: none; border-radius: 28px; padding: 16px 18px; min-height: 160px; }
+.bubble-read { padding: 14px 18px; margin-bottom: 40px; }
+
+.ed-foot { display: flex; gap: 10px; margin-top: 28px; }
+.ed-foot .btn-primary { flex: 1; }
+.ed-foot .btn-ghost { min-width: 96px; }
+
+/* Detail */
+.dt-date { margin-top: 20px; font-family: var(--font-display); font-weight: 600; font-size: 27px; line-height: 1.15; }
+.dt-time { margin-top: 2px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dt-sec { margin-top: 26px; }
+.sec-label { margin: 0 2px 10px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.dt-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { padding: 4px 11px; border-radius: 999px; background: var(--surface); border: 1px solid var(--rule); font-size: 15px; }
+.tag-note { margin-top: 10px; }
+.meters { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.meter-row { display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; align-items: baseline; }
+.meter-name { font-weight: 600; }
+.meter-val { font-family: var(--font-display); font-size: 22px; font-variant-numeric: tabular-nums lining-nums; }
+.meter { grid-column: 1 / -1; height: 8px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.meter > span { display: block; height: 100%; width: calc(var(--v, 0) * 100%); background: var(--accent); border-radius: inherit; }
+.empty-part { color: var(--muted); }
+.dt-actions { display: flex; gap: 10px; margin-top: 30px; }
+.dt-actions .btn { flex: 1; }
+.fallback { margin-top: 12px; font-size: 15px; min-height: 140px; }
+
+/* Sheet & dialog */
+.overlay { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; background: rgba(8, 14, 19, 0.46); }
+.sheet {
+  width: 100%; max-width: 560px; max-height: 90%; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 0 18px calc(22px + env(safe-area-inset-bottom));
+  background: var(--paper); border-radius: 20px 20px 0 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.18);
+}
+.sheet-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; padding: 12px 0 6px; background: var(--paper); }
+.sheet-head h2 { font-family: var(--font-display); font-weight: 600; font-size: 25px; }
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; margin: 6px 0 16px; background: var(--track); border-radius: 13px; }
+.seg button {
+  -webkit-appearance: none; appearance: none; border: 0; background: transparent; border-radius: 10px;
+  min-height: 40px; font-size: 15px; font-weight: 500; color: var(--muted); cursor: pointer; touch-action: manipulation;
+}
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px var(--shadow), 0 0 0 1px var(--rule); }
+.sum-range { margin: 0 2px 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.sum-stats { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; padding: 14px 16px; background: var(--surface); border: 1px solid var(--rule); border-radius: 15px; }
+.sum-count { display: grid; justify-items: start; padding-right: 16px; border-right: 1px solid var(--rule); }
+.sum-big { font-family: var(--font-display); font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums lining-nums; }
+.sum-unit { font-size: 14px; color: var(--muted); }
+.sum-k { display: block; font-size: 13px; color: var(--muted); margin-bottom: 3px; }
+.sum-k + .sum-top { margin-bottom: 10px; }
+.sum-top { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.sum-top li { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
+.sum-top li span:first-child { font-weight: 600; }
+.sum-n { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sum-list { list-style: none; margin: 14px 0 0; padding: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 15px; overflow: hidden; }
+.sum-list li { display: grid; gap: 1px; padding: 10px 14px; }
+.sum-list li + li { border-top: 1px solid var(--rule); }
+.sum-when { font-size: 13px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sum-snip { font-family: var(--font-display); font-size: 16px; overflow-wrap: anywhere; }
+.sheet-actions { display: grid; gap: 10px; margin-top: 18px; }
+.sheet-note { margin: 12px 2px 0; font-size: 14px; color: var(--muted); }
+
+#cf-overlay { align-items: center; padding: 24px; }
+.dialog { width: 100%; max-width: 340px; padding: 22px 20px 18px; background: var(--surface); border-radius: 20px; box-shadow: 0 16px 44px rgba(0, 0, 0, 0.28); }
+.dialog h2 { font-size: 19px; font-weight: 600; }
+.dialog p { margin: 6px 0 20px; color: var(--muted); }
+.dialog-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 60;
+  max-width: calc(100% - 36px); padding: 11px 18px; border-radius: 999px;
+  background: var(--ink); color: var(--paper); font-size: 15px; font-weight: 500; text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  opacity: 0; transform: translate(-50%, 12px); transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 360px) {
+  .step-l { font-size: 10px; }
+  .entry-grid { grid-template-columns: 78px minmax(0, 1fr); }
+  .seg button { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Home -->
+  <section id="home" class="view" aria-labelledby="home-title">
+    <header class="home-head">
+      <p class="eyebrow" id="home-date"></p>
+      <h1 id="home-title">Thought record</h1>
+      <p class="lede">When you notice a change in how you feel, note the situation, what you felt in your body, your thoughts, your emotions and what you did.</p>
+    </header>
+
+    <div class="notice" id="install-notice" hidden>
+      <p class="notice-title">Add it to your Home Screen</p>
+      <p class="notice-text" id="install-text"></p>
+      <ol id="install-steps">
+        <li>Tap the Share button in Safari.</li>
+        <li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+        <li>Open it from the new icon. It then works offline.</li>
+      </ol>
+    </div>
+    <div class="notice notice-warn" id="store-notice" hidden>
+      <p class="notice-title">Records can&rsquo;t be stored here</p>
+      <p class="notice-text">This browser isn&rsquo;t letting the app keep data, so anything you add will be lost when you close it. Open the app from your Home Screen icon instead.</p>
+    </div>
+
+    <div class="home-actions">
+      <button type="button" class="btn btn-primary btn-xl" id="btn-new">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+        New thought record
+      </button>
+      <button type="button" class="row-btn" id="btn-summary">
+        <span class="lead-ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg></span>
+        <span class="row-btn-main">
+          <span class="row-btn-title">Session summary</span>
+          <span class="row-btn-sub" id="summary-sub">Share your records with your therapist</span>
+        </span>
+        <span class="ico chev" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+    </div>
+
+    <div class="banner" id="draft-banner" hidden>
+      <span class="grow" id="draft-text">You have an unfinished record.</span>
+      <span class="acts">
+        <button type="button" class="link-btn" id="draft-discard">Discard</button>
+        <button type="button" class="link-btn" id="draft-continue">Continue</button>
+      </span>
+    </div>
+    <div class="banner" id="backup-banner" hidden>
+      <span class="grow" id="backup-text">Your records are only on this phone. Save a backup to Files now and then.</span>
+      <span class="acts"><button type="button" class="link-btn" id="backup-now">Back up now</button></span>
+    </div>
+
+    <div id="list"></div>
+
+    <section class="panel" aria-labelledby="data-title">
+      <h2 id="data-title">Your data</h2>
+      <p id="data-where">Stored only on this phone. Nothing is sent anywhere.</p>
+      <p class="muted" id="data-backup">Last backup: never</p>
+      <div class="panel-actions">
+        <button type="button" class="btn btn-ghost btn-small" id="btn-backup">Back up to Files</button>
+        <button type="button" class="btn btn-ghost btn-small" id="btn-restore">Restore backup</button>
+      </div>
+      <p class="muted">Removing the app from your Home Screen can delete its records, so back up first.</p>
+      <label class="sr-only" for="restore-input">Backup file</label>
+      <input type="file" id="restore-input" accept=".json,application/json" hidden>
+    </section>
+
+    <details class="tips">
+      <summary>How to use it <span class="ico chev" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+      <ul>
+        <li>Fill one in when you notice a change in how you feel, as soon as you can while it&rsquo;s fresh.</li>
+        <li>The five parts affect each other: what you think changes how you feel and what you do, and what you do changes how things go next.</li>
+        <li>Emotions are usually one word, like sad, angry or anxious. Thoughts are sentences, pictures in your mind or memories.</li>
+        <li>Physical feelings are what you notice in your body. Behaviours are what you did, avoided, or felt like doing.</li>
+        <li>Rate each emotion from 0 (not at all) to 100% (as strong as it gets).</li>
+        <li>Before each session, open Session summary to share your records.</li>
+      </ul>
+    </details>
+    <p class="status" id="status">
+      <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+      <span id="status-text">Opening your records&hellip;</span>
+    </p>
+  </section>
+
+  <!-- Editor: five steps -->
+  <section id="editor" class="view" hidden aria-labelledby="ed-title">
+    <div class="bar">
+      <button type="button" class="link-btn" id="ed-cancel">Cancel</button>
+      <h1 class="bar-title" id="ed-title">New record</h1>
+      <button type="button" class="link-btn strong" id="ed-save-top">Save</button>
+    </div>
+    <div class="steps" role="group" aria-label="Parts of the record">
+      <button type="button" class="step" data-step="0"><span class="step-n">1</span><span class="step-l">Situation</span></button>
+      <button type="button" class="step" data-step="1"><span class="step-n">2</span><span class="step-l">Body</span></button>
+      <button type="button" class="step" data-step="2"><span class="step-n">3</span><span class="step-l">Thoughts</span></button>
+      <button type="button" class="step" data-step="3"><span class="step-n">4</span><span class="step-l">Emotions</span></button>
+      <button type="button" class="step" data-step="4"><span class="step-n">5</span><span class="step-l">Behaviours</span></button>
+    </div>
+    <p class="step-eyebrow" id="step-eyebrow"></p>
+    <p class="context" id="ed-context" hidden></p>
+
+    <div class="pane" data-pane="0">
+      <h2 class="q">What was happening?</h2>
+      <p class="help">Who was there, what were you doing, and where were you?</p>
+      <label class="sr-only" for="f-situation">Situation</label>
+      <textarea id="f-situation" class="input textarea serif" rows="4" autocapitalize="sentences" placeholder="e.g. At home on Sunday evening, checking my work emails"></textarea>
+      <label class="field-label" for="f-when">When</label>
+      <input type="datetime-local" id="f-when" class="input">
+      <p class="field-note">Set to now. Change it if this happened earlier.</p>
+    </div>
+
+    <div class="pane" data-pane="1" hidden>
+      <h2 class="q">What did you notice in your body?</h2>
+      <p class="help">Tap anything you noticed, or add your own.</p>
+      <div class="chips" id="chips-body" data-group="body" role="group" aria-label="Physical feelings"></div>
+      <div class="add-own" id="own-body" hidden>
+        <label class="sr-only" for="own-body-in">Your own physical feeling</label>
+        <input type="text" id="own-body-in" class="input" maxlength="40" autocapitalize="sentences" autocomplete="off" enterkeyhint="done" placeholder="e.g. Clenched jaw" data-group="body">
+        <button type="button" class="btn btn-ghost" data-add-own="body">Add</button>
+      </div>
+      <label class="field-label" for="f-body-note">Anything else <span class="opt">(optional)</span></label>
+      <textarea id="f-body-note" class="input textarea short serif" rows="2" autocapitalize="sentences" placeholder="e.g. Couldn&rsquo;t sit still, felt cold"></textarea>
+    </div>
+
+    <div class="pane" data-pane="2" hidden>
+      <h2 class="q">What went through your mind?</h2>
+      <p class="help">Words, pictures or memories. Write them the way they sounded in your head.</p>
+      <div class="bubble">
+        <label class="sr-only" for="f-thoughts">Thoughts</label>
+        <textarea id="f-thoughts" class="input textarea serif" rows="5" autocapitalize="sentences" placeholder="e.g. I&rsquo;m going to mess this up."></textarea>
+      </div>
+    </div>
+
+    <div class="pane" data-pane="3" hidden>
+      <h2 class="q">What emotions did you feel?</h2>
+      <p class="help">Tap each one, then rate how strong it was from 0 to 100%.</p>
+      <div class="chips" id="chips-emo" data-group="emo" role="group" aria-label="Emotions"></div>
+      <div class="add-own" id="own-emo" hidden>
+        <label class="sr-only" for="own-emo-in">Your own emotion</label>
+        <input type="text" id="own-emo-in" class="input" maxlength="40" autocapitalize="sentences" autocomplete="off" enterkeyhint="done" placeholder="Type an emotion" data-group="emo">
+        <button type="button" class="btn btn-ghost" data-add-own="emo">Add</button>
+      </div>
+      <p class="own-hint" id="own-hint" hidden>That sounds more like a thought. Emotions are usually one word. <button type="button" class="inline-link" id="own-move">Put it in Thoughts</button>, or tap Add again to keep it here.</p>
+      <div class="ratings" id="ratings" hidden></div>
+      <aside class="tip"><strong>Emotion or thought?</strong>An emotion is usually one word, like sad, angry or anxious. If it&rsquo;s a sentence, an image or a memory, it&rsquo;s a thought.</aside>
+    </div>
+
+    <div class="pane" data-pane="4" hidden>
+      <h2 class="q">What did you do?</h2>
+      <p class="help">What did you do, avoid or stop doing? What did you feel like doing?</p>
+      <div class="chips" id="chips-beh" data-group="beh" role="group" aria-label="Behaviours"></div>
+      <div class="add-own" id="own-beh" hidden>
+        <label class="sr-only" for="own-beh-in">Your own behaviour</label>
+        <input type="text" id="own-beh-in" class="input" maxlength="60" autocapitalize="sentences" autocomplete="off" enterkeyhint="done" placeholder="e.g. Cancelled my plans" data-group="beh">
+        <button type="button" class="btn btn-ghost" data-add-own="beh">Add</button>
+      </div>
+      <label class="field-label" for="f-beh-note">In your own words <span class="opt">(optional)</span></label>
+      <textarea id="f-beh-note" class="input textarea short serif" rows="2" autocapitalize="sentences" placeholder="e.g. Said I was ill and stayed in bed"></textarea>
+    </div>
+
+    <div class="ed-foot">
+      <button type="button" class="btn btn-ghost" id="ed-back" hidden>Back</button>
+      <button type="button" class="btn btn-primary" id="ed-next">Next: Physical feelings</button>
+    </div>
+  </section>
+
+  <!-- Detail -->
+  <section id="detail" class="view" hidden aria-label="Record">
+    <div class="bar">
+      <button type="button" class="link-btn" id="dt-back">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></span>
+        Records
+      </button>
+      <span></span>
+      <button type="button" class="link-btn strong" id="dt-edit">Edit</button>
+    </div>
+    <div id="dt-body"></div>
+    <div class="dt-actions">
+      <button type="button" class="btn btn-ghost" id="dt-share">Share</button>
+      <button type="button" class="btn btn-danger-ghost" id="dt-delete">Delete</button>
+    </div>
+    <label class="sr-only" for="dt-fallback">Record as text</label>
+    <textarea id="dt-fallback" class="input textarea fallback" readonly hidden></textarea>
+  </section>
+</div>
+
+<!-- Session summary sheet -->
+<div class="overlay" id="sum-overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sum-title">
+    <div class="sheet-head">
+      <h2 id="sum-title" tabindex="-1">Session summary</h2>
+      <button type="button" class="link-btn strong" id="sum-close">Done</button>
+    </div>
+    <div class="seg" id="sum-seg" role="group" aria-label="Period">
+      <button type="button" data-days="7" aria-pressed="true">7 days</button>
+      <button type="button" data-days="14" aria-pressed="false">14 days</button>
+      <button type="button" data-days="30" aria-pressed="false">30 days</button>
+      <button type="button" data-days="0" aria-pressed="false">All</button>
+    </div>
+    <div id="sum-body"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-primary" id="sum-pdf">Share as PDF</button>
+      <button type="button" class="btn btn-ghost" id="sum-text">Share as text</button>
+    </div>
+    <p class="sheet-note">The PDF is laid out like a five-column worksheet. Send it by email or message, or save it to Files.</p>
+    <label class="sr-only" for="sum-fallback">Summary as text</label>
+    <textarea id="sum-fallback" class="input textarea fallback" readonly hidden></textarea>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div class="overlay" id="cf-overlay" hidden>
+  <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="cf-title" aria-describedby="cf-text">
+    <h2 id="cf-title"></h2>
+    <p id="cf-text"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="cf-no"></button>
+      <button type="button" class="btn btn-danger" id="cf-yes"></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ---------- Content ---------- */
+  const BODY = ['Racing heart', 'Tight chest', 'Short of breath', 'Butterflies', 'Feeling sick', 'Shaky', 'Sweaty',
+    'Hot or flushed', 'Tense muscles', 'Headache', 'Dizzy', 'Heavy or tired', 'Restless', 'Lump in throat', 'Tearful'];
+  const EMOTIONS = ['Anxious', 'Worried', 'Scared', 'Panicky', 'Overwhelmed', 'Sad', 'Low', 'Hopeless', 'Lonely',
+    'Hurt', 'Angry', 'Irritable', 'Frustrated', 'Ashamed', 'Guilty', 'Embarrassed', 'Jealous'];
+  const BEHAVIOURS = ['Avoided it', 'Left early', 'Stayed in', 'Kept to myself', 'Snapped at someone', 'Asked for reassurance',
+    'Over-prepared or checked', 'Kept busy', 'Put it off', 'Scrolled my phone', 'Talked to someone', 'Carried on anyway'];
+  const STEP_TITLES = ['Situation', 'Physical feelings', 'Thoughts', 'Emotions', 'Behaviours'];
+  const STEP_NEXT = ['Next: Physical feelings', 'Next: Thoughts', 'Next: Emotions', 'Next: Behaviours', 'Save record'];
+  const EXAMPLE = {
+    label: 'Sat · 15:30',
+    situation: 'Saturday afternoon at home. A friend still hadn’t replied to the message I sent on Thursday.',
+    body: ['Heavy or tired', 'Tight chest'], bodyNote: '',
+    thoughts: 'They’re annoyed with me. I must have said something wrong.',
+    emotions: [{ name: 'Low', rating: 60 }, { name: 'Anxious', rating: 40 }],
+    behaviours: ['Kept to myself', 'Scrolled my phone'], behaviourNote: 'Checked my phone every few minutes.'
+  };
+  const KEYS = { draft: 'tr5.draft', backup: 'tr5.lastBackup', records: 'tr5.records' };
+  const PDF_FILES = ['jspdf.umd.min.js', 'jspdf.plugin.autotable.min.js'];
+  const SVG = {
+    chev: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+    check: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    x: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+  };
+
+  /* ---------- Helpers ---------- */
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+  function el(tag, attrs, kids) {
+    const n = document.createElement(tag);
+    if (attrs) for (const k of Object.keys(attrs)) {
+      const v = attrs[k];
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'class') n.className = v; else n.setAttribute(k, v === true ? '' : String(v));
+    }
+    add(n, kids);
+    return n;
+  }
+  function add(n, kids) {
+    if (kids === null || kids === undefined || kids === false) return;
+    if (Array.isArray(kids)) { kids.forEach(k => add(n, k)); return; }
+    n.append(kids instanceof Node ? kids : document.createTextNode(String(kids)));
+  }
+  function icon(name, cls) {
+    const s = document.createElement('span');
+    s.className = 'ico' + (cls ? ' ' + cls : '');
+    s.setAttribute('aria-hidden', 'true');
+    s.innerHTML = SVG[name];
+    return s;
+  }
+  const ls = {
+    get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (_) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (_) { return false; } },
+    del(k) { try { localStorage.removeItem(k); } catch (_) { /* storage unavailable */ } }
+  };
+  const lsWorks = (() => { try { localStorage.setItem('tr5.test', '1'); localStorage.removeItem('tr5.test'); return true; } catch (_) { return false; } })();
+
+  /* ---------- Platform ---------- */
+  const ua = navigator.userAgent;
+  const isIPad = /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isIOS = isIPad || /iPhone|iPod/.test(ua);
+  const deviceName = isIPad ? 'iPad' : /iPhone|iPod/.test(ua) ? 'iPhone' : 'device';
+  const isStandalone = () => window.navigator.standalone === true || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+
+  /* ---------- Dates ---------- */
+  const pad = n => String(n).padStart(2, '0');
+  const toLocalString = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const nowLocal = () => toLocalString(new Date());
+  const WHEN_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+  function parseWhen(s) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(s || '');
+    if (!m) return new Date();
+    return new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0));
+  }
+  function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+  function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+  function startOfWeek(d) { const x = startOfDay(d); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+  const fmt = (d, o) => new Intl.DateTimeFormat('en-GB', o).format(d);
+  const fmtTime = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const dayMonth = d => fmt(d, { weekday: 'short' }) + ' ' + d.getDate() + ' ' + fmt(d, { month: 'short' });
+  function fmtShort(when) {
+    const d = when instanceof Date ? when : parseWhen(when);
+    const y = d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : '';
+    return dayMonth(d) + y + ' · ' + fmtTime(d);
+  }
+  const fmtLongDate = when => { const d = parseWhen(when); return fmt(d, { weekday: 'long' }) + ' ' + d.getDate() + ' ' + fmt(d, { month: 'long' }) + ' ' + d.getFullYear(); };
+  const fmtLong = when => fmtLongDate(when) + ', ' + fmtTime(parseWhen(when));
+  const fmtDM = (d, withYear) => fmt(d, withYear ? { day: 'numeric', month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' });
+  const isoDay = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  function fmtRange(a, b) {
+    if (isoDay(a) === isoDay(b)) return fmtDM(b, true);
+    return fmtDM(a, a.getFullYear() !== b.getFullYear()) + ' – ' + fmtDM(b, true);
+  }
+
+  /* ---------- Records ---------- */
+  const newId = () => 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const str = (v, max) => (typeof v === 'string' ? v.slice(0, max || 20000) : '');
+  function clampRating(v) { const n = Math.round(Number(v) / 5) * 5; return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 50; }
+  function tagList(v) {
+    if (!Array.isArray(v)) return [];
+    const out = [], seen = new Set();
+    for (const t of v) {
+      if (typeof t !== 'string' || !t.trim()) continue;
+      const s = t.trim().slice(0, 60), k = s.toLowerCase();
+      if (!seen.has(k)) { seen.add(k); out.push(s); }
+    }
+    return out.slice(0, 30);
+  }
+  function emotionList(v) {
+    return Array.isArray(v) ? v.filter(f => f && typeof f.name === 'string' && f.name.trim()).slice(0, 24)
+      .map(f => ({ name: f.name.trim().slice(0, 40), rating: clampRating(f.rating) })) : [];
+  }
+  function normalize(raw) {
+    if (!raw || typeof raw !== 'object' || typeof raw.id !== 'string' || !raw.id) return null;
+    const when = typeof raw.when === 'string' && WHEN_RE.test(raw.when) ? raw.when.slice(0, 16) : nowLocal();
+    return {
+      id: raw.id.slice(0, 80), when, ts: parseWhen(when).getTime(),
+      situation: str(raw.situation), body: tagList(raw.body), bodyNote: str(raw.bodyNote),
+      thoughts: str(raw.thoughts), emotions: emotionList(raw.emotions),
+      behaviours: tagList(raw.behaviours), behaviourNote: str(raw.behaviourNote),
+      created: Number(raw.created) || 0, updated: Number(raw.updated) || 0
+    };
+  }
+  const tagsText = (tags, note) => [tags.join(', '), (note || '').trim()].filter(Boolean).join('. ');
+  const emotionsText = r => r.emotions.map(f => f.name + ' ' + f.rating + '%').join(', ');
+
+  /* ---------- Storage on this device (IndexedDB, or localStorage if that fails) ---------- */
+  const Store = (() => {
+    let mode = 'idb', dbp = null;
+    const mem = new Map();
+    function open() {
+      return new Promise((res, rej) => {
+        if (!window.indexedDB) { rej(new Error('IndexedDB unavailable')); return; }
+        let req;
+        try { req = indexedDB.open('thought-record', 1); } catch (e) { rej(e); return; }
+        req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains('records')) req.result.createObjectStore('records', { keyPath: 'id' }); };
+        req.onsuccess = () => { const db = req.result; db.onversionchange = () => db.close(); res(db); };
+        req.onerror = () => rej(req.error);
+        req.onblocked = () => rej(new Error('IndexedDB blocked'));
+      });
+    }
+    function run(txMode, fn) {
+      return dbp.then(db => new Promise((res, rej) => {
+        const t = db.transaction('records', txMode);
+        const out = fn(t.objectStore('records'));
+        t.oncomplete = () => res(out ? out.result : undefined);
+        t.onerror = () => rej(t.error);
+        t.onabort = () => rej(t.error || new Error('Transaction aborted'));
+      }));
+    }
+    async function init() {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try { dbp = open(); await dbp; mode = 'idb'; return mode; }
+        catch (_) { await new Promise(r => setTimeout(r, 300)); }
+      }
+      mode = lsWorks ? 'ls' : 'memory';
+      return mode;
+    }
+    const lsAll = () => { const o = ls.get(KEYS.records); return o && typeof o === 'object' ? o : {}; };
+    async function all() {
+      if (mode === 'idb') return run('readonly', s => s.getAll());
+      if (mode === 'ls') return Object.values(lsAll());
+      return Array.from(mem.values());
+    }
+    async function putMany(list) {
+      if (mode === 'idb') { await run('readwrite', s => { list.forEach(r => s.put(r)); return null; }); return; }
+      if (mode === 'ls') {
+        const o = lsAll();
+        list.forEach(r => { o[r.id] = r; });
+        if (!ls.set(KEYS.records, o)) throw new Error('Storage full');
+        return;
+      }
+      list.forEach(r => mem.set(r.id, r));
+    }
+    async function remove(id) {
+      if (mode === 'idb') { await run('readwrite', s => { s.delete(id); return null; }); return; }
+      if (mode === 'ls') { const o = lsAll(); delete o[id]; ls.set(KEYS.records, o); return; }
+      mem.delete(id);
+    }
+    return { init, all, put: r => putMany([r]), putMany, remove, get mode() { return mode; } };
+  })();
+
+  const records = new Map();
+  let ready = false, loadFailed = false, offlineReady = false, persistAsked = false;
+  const allEntries = () => Array.from(records.values()).sort((a, b) => (b.ts - a.ts) || (b.created - a.created));
+  const findEntry = id => records.get(id) || null;
+  function askPersist() {
+    if (persistAsked) return;
+    persistAsked = true;
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (_) { /* not supported */ }
+  }
+
+  /* ---------- Views ---------- */
+  const state = { view: 'home' };
+  let homeScroll = 0, detailId = '';
+  function showView(name) {
+    if (state.view === 'home') homeScroll = window.scrollY;
+    state.view = name;
+    for (const v of $$('.view')) v.hidden = v.id !== name;
+    render();
+    if (name === 'home') requestAnimationFrame(() => window.scrollTo(0, homeScroll));
+    else window.scrollTo(0, 0);
+  }
+  function render() {
+    if (state.view === 'home') renderHome();
+    else if (state.view === 'detail') renderDetail();
+    if (!$('#sum-overlay').hidden) renderSummary();
+  }
+
+  /* ---------- Home ---------- */
+  function rangeStart(days) { return days ? startOfDay(addDays(new Date(), -(days - 1))) : null; }
+  function inRange(e, days) { const s = rangeStart(days); return !s || e.ts >= s.getTime(); }
+  function weekLabel(mon) {
+    const diff = Math.round((startOfWeek(new Date()) - mon) / 6048e5);
+    if (diff === 0) return 'This week';
+    if (diff === 1) return 'Last week';
+    return 'Week of ' + fmtDM(mon, mon.getFullYear() !== new Date().getFullYear());
+  }
+  function groupByWeek(list) {
+    const out = [];
+    let cur = null;
+    for (const e of list) {
+      const mon = startOfWeek(parseWhen(e.when));
+      if (!cur || cur.key !== mon.getTime()) { cur = { key: mon.getTime(), mon, items: [] }; out.push(cur); }
+      cur.items.push(e);
+    }
+    return out;
+  }
+  const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+  const groupHead = (title, count) => el('div', { class: 'group-head' }, [el('h2', { class: 'group-title' }, title), count ? el('span', { class: 'group-count' }, count) : null]);
+  const fchip = f => el('span', { class: 'fchip', style: '--v:' + (f.rating / 100) }, [f.name + ' ', el('b', null, f.rating + '%')]);
+  const emptyVal = () => el('span', { class: 'val empty-val' }, 'Not filled in');
+
+  function recordGrid(e, clamp) {
+    const c = clamp ? ' clamp' : '';
+    const body = tagsText(e.body, e.bodyNote), beh = tagsText(e.behaviours, e.behaviourNote);
+    return el('span', { class: 'entry-grid' }, [
+      el('span', { class: 'lbl' }, 'Situation'), e.situation ? el('span', { class: 'val serif' + c }, e.situation) : emptyVal(),
+      el('span', { class: 'lbl' }, 'Physical'), body ? el('span', { class: 'val serif' + c }, body) : emptyVal(),
+      el('span', { class: 'lbl' }, 'Thoughts'), e.thoughts ? el('span', { class: 'val serif thought' + c }, e.thoughts) : emptyVal(),
+      el('span', { class: 'lbl' }, 'Emotions'), e.emotions.length ? el('span', { class: 'val fchips' }, e.emotions.map(fchip)) : emptyVal(),
+      el('span', { class: 'lbl' }, 'Behaviours'), beh ? el('span', { class: 'val serif' + c }, beh) : emptyVal()
+    ]);
+  }
+  function entryRow(e) {
+    const top = el('span', { class: 'entry-top' }, [el('span', { class: 'entry-date' }, fmtShort(e.when)), icon('chev', 'chev')]);
+    return el('li', null, el('button', { type: 'button', class: 'entry', 'data-id': e.id }, [top, recordGrid(e, true)]));
+  }
+  function exampleBlock() {
+    const card = el('div', { class: 'entry' }, [
+      el('span', { class: 'entry-top' }, [el('span', { class: 'entry-date' }, EXAMPLE.label), el('span', { class: 'pill' }, 'Example')]),
+      recordGrid(EXAMPLE, false)
+    ]);
+    return [el('div', { class: 'group example' }, card),
+      el('p', { class: 'list-note' }, 'Your own records will appear here, newest first, grouped by week.')];
+  }
+  function lastBackup() { return Number(ls.get(KEYS.backup)) || 0; }
+  function needsBackup(all) {
+    if (!all.length) return false;
+    const lb = lastBackup();
+    const newest = Math.max.apply(null, all.map(r => r.updated || r.created || 0));
+    if (!lb) return all.length >= 3;
+    return newest > lb && Date.now() - lb > 14 * 864e5;
+  }
+
+  function renderHome() {
+    const all = allEntries();
+    $('#home-date').textContent = fmt(new Date(), { weekday: 'long' }) + ' ' + new Date().getDate() + ' ' + fmt(new Date(), { month: 'long' });
+
+    const installed = isStandalone();
+    $('#install-notice').hidden = installed;
+    if (!installed) {
+      $('#install-text').textContent = isIOS
+        ? 'It then opens like an app, works offline and keeps your records on this ' + deviceName + '. Records added in a Safari tab stay in Safari, separate from the app.'
+        : 'Open this page in Safari on your iPhone, then add it to your Home Screen there.';
+      $('#install-steps').hidden = !isIOS;
+    }
+    $('#store-notice').hidden = !(ready && Store.mode === 'memory');
+
+    const n7 = all.filter(e => inRange(e, 7)).length;
+    $('#summary-sub').textContent = n7 ? plural(n7, 'record') + ' in the last 7 days' : 'Share your records with your therapist';
+
+    const dr = getDraft();
+    $('#draft-banner').hidden = !dr;
+    if (dr) $('#draft-text').textContent = 'You have an unfinished record' + (dr.at ? ' from ' + fmtShort(new Date(dr.at)) : '') + '.';
+    $('#backup-banner').hidden = !(ready && needsBackup(all));
+    if (!$('#backup-banner').hidden) $('#backup-text').textContent = 'Your records are only on this ' + deviceName + '. Save a backup to Files now and then.';
+
+    const lb = lastBackup();
+    $('#data-where').textContent = Store.mode === 'memory'
+      ? 'This browser isn’t keeping data, so records will be lost when you close it.'
+      : 'Stored only on this ' + deviceName + '. Nothing is sent anywhere.';
+    $('#data-backup').textContent = 'Last backup: ' + (lb ? fmtShort(new Date(lb)) : 'never');
+    $('#btn-backup').disabled = !all.length;
+
+    const st = !ready ? 'Opening your records…'
+      : loadFailed ? 'Couldn’t open your saved records. Close the app and open it again.'
+      : Store.mode === 'memory' ? 'Not saving: this browser blocks storage.'
+      : 'Stored on this ' + deviceName + (offlineReady ? ' · Works offline' : '');
+    $('#status-text').textContent = st;
+
+    const list = $('#list');
+    list.textContent = '';
+    if (!ready) { list.append(el('p', { class: 'list-note' }, 'Opening your records…')); return; }
+    if (!all.length) { add(list, [groupHead('Example', ''), exampleBlock()]); return; }
+    for (const g of groupByWeek(all)) {
+      list.append(groupHead(weekLabel(g.mon), plural(g.items.length, 'record')));
+      list.append(el('ul', { class: 'group' }, g.items.map(entryRow)));
+    }
+  }
+  function flashEntry(id) {
+    requestAnimationFrame(() => {
+      const b = $$('#list .entry').find(x => x.dataset.id === id);
+      if (!b) return;
+      b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
+    });
+  }
+
+  /* ---------- Editor ---------- */
+  const ed = { mode: 'new', id: '', step: 0, data: null, initial: '', ownConfirm: '', saving: false };
+  const blankData = () => ({ when: nowLocal(), situation: '', body: [], bodyNote: '', thoughts: '', emotions: [], behaviours: [], behaviourNote: '' });
+  const dataOf = r => ({ when: r.when, situation: r.situation, body: r.body.slice(), bodyNote: r.bodyNote, thoughts: r.thoughts,
+    emotions: r.emotions.map(f => ({ name: f.name, rating: f.rating })), behaviours: r.behaviours.slice(), behaviourNote: r.behaviourNote });
+  const snapshotData = d => JSON.stringify([d.when, d.situation.trim(), d.body, d.bodyNote.trim(), d.thoughts.trim(),
+    d.emotions.map(f => [f.name, f.rating]), d.behaviours, d.behaviourNote.trim()]);
+  const isDirty = () => !!ed.data && snapshotData(ed.data) !== ed.initial;
+  function hasContent(d) {
+    return !!(d.situation.trim() || d.body.length || d.bodyNote.trim() || d.thoughts.trim() || d.emotions.length || d.behaviours.length || d.behaviourNote.trim());
+  }
+
+  function openEditor(entry, resume) {
+    if (resume) {
+      const n = normalize(Object.assign({}, resume.data || {}, { id: 'draft' }));
+      ed.mode = resume.mode === 'edit' ? 'edit' : 'new';
+      ed.id = typeof resume.id === 'string' && resume.id ? resume.id : newId();
+      ed.data = dataOf(n);
+      ed.step = Math.min(4, Math.max(0, Number(resume.step) || 0));
+      ed.initial = typeof resume.initial === 'string' ? resume.initial : '';
+    } else if (entry) {
+      ed.mode = 'edit'; ed.id = entry.id; ed.step = 0; ed.data = dataOf(entry); ed.initial = snapshotData(ed.data);
+    } else {
+      ed.mode = 'new'; ed.id = newId(); ed.step = 0; ed.data = blankData(); ed.initial = snapshotData(ed.data);
+    }
+    ed.ownConfirm = '';
+    $('#ed-title').textContent = ed.mode === 'edit' ? 'Edit record' : 'New record';
+    $('#f-situation').value = ed.data.situation;
+    $('#f-when').value = ed.data.when;
+    $('#f-body-note').value = ed.data.bodyNote;
+    $('#f-thoughts').value = ed.data.thoughts;
+    $('#f-beh-note').value = ed.data.behaviourNote;
+    for (const g of Object.keys(GROUPS)) { $('#' + GROUPS[g].wrap).hidden = true; $('#' + GROUPS[g].input).value = ''; renderChips(g); }
+    $('#own-hint').hidden = true;
+    renderRatings();
+    showView('editor');
+    goStep(ed.step);
+  }
+  function readFields() {
+    if (!ed.data) return;
+    ed.data.situation = $('#f-situation').value;
+    ed.data.when = ($('#f-when').value || ed.data.when || nowLocal()).slice(0, 16);
+    ed.data.bodyNote = $('#f-body-note').value;
+    ed.data.thoughts = $('#f-thoughts').value;
+    ed.data.behaviourNote = $('#f-beh-note').value;
+  }
+  function stepFilled(i) {
+    const d = ed.data;
+    if (!d) return false;
+    return [!!d.situation.trim(), d.body.length > 0 || !!d.bodyNote.trim(), !!d.thoughts.trim(),
+      d.emotions.length > 0, d.behaviours.length > 0 || !!d.behaviourNote.trim()][i];
+  }
+  function updateStepTabs() {
+    for (const b of $$('.step')) {
+      const i = Number(b.dataset.step), on = i === ed.step, done = stepFilled(i);
+      b.classList.toggle('on', on);
+      b.classList.toggle('done', done);
+      if (on) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+      b.setAttribute('aria-label', 'Step ' + (i + 1) + ', ' + STEP_TITLES[i] + (done ? ', filled in' : ''));
+      $('.step-n', b).innerHTML = done && !on ? SVG.check : String(i + 1);
+    }
+  }
+  function goStep(n) {
+    readFields();
+    ed.step = n;
+    for (const p of $$('.pane')) p.hidden = Number(p.dataset.pane) !== n;
+    updateStepTabs();
+    $('#step-eyebrow').textContent = 'Step ' + (n + 1) + ' of 5 · ' + STEP_TITLES[n];
+    const ctx = $('#ed-context'), sit = ed.data.situation.trim();
+    ctx.hidden = !(n > 0 && sit);
+    if (!ctx.hidden) { ctx.textContent = ''; add(ctx, [el('b', null, 'Situation: '), sit]); }
+    $('#ed-back').hidden = n === 0;
+    $('#ed-next').textContent = STEP_NEXT[n];
+    window.scrollTo(0, 0);
+    requestAnimationFrame(autosizeAll);
+    saveDraftSoon();
+  }
+  function autosize(t) {
+    if (!t || t.offsetParent === null) return;
+    const cs = getComputedStyle(t);
+    t.style.height = 'auto';
+    t.style.height = (t.scrollHeight + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth)) + 'px';
+  }
+  const autosizeAll = () => $$('textarea').forEach(autosize);
+
+  /* Chip groups: physical feelings, emotions (with ratings) and behaviours */
+  const GROUPS = {
+    body: { box: 'chips-body', defaults: BODY, wrap: 'own-body', input: 'own-body-in' },
+    emo: { box: 'chips-emo', defaults: EMOTIONS, wrap: 'own-emo', input: 'own-emo-in' },
+    beh: { box: 'chips-beh', defaults: BEHAVIOURS, wrap: 'own-beh', input: 'own-beh-in' }
+  };
+  const namesIn = (g, r) => (g === 'emo' ? r.emotions.map(f => f.name) : g === 'body' ? r.body : r.behaviours);
+  function chipNames(g) {
+    const names = GROUPS[g].defaults.slice();
+    const seen = new Set(names.map(n => n.toLowerCase()));
+    const push = n => { const k = n.toLowerCase(); if (seen.has(k)) return false; seen.add(k); names.push(n); return true; };
+    namesIn(g, ed.data).forEach(push);
+    let extra = 0;
+    for (const r of allEntries()) {
+      for (const n of namesIn(g, r)) { if (extra < 8 && push(n)) extra++; }
+      if (extra >= 8) break;
+    }
+    return names;
+  }
+  function renderChips(g) {
+    const box = $('#' + GROUPS[g].box);
+    box.textContent = '';
+    const sel = new Set(namesIn(g, ed.data).map(n => n.toLowerCase()));
+    for (const name of chipNames(g)) {
+      box.append(el('button', { type: 'button', class: 'chip', 'data-name': name, 'aria-pressed': sel.has(name.toLowerCase()) ? 'true' : 'false' }, [icon('check', 'ck'), name]));
+    }
+    box.append(el('button', { type: 'button', class: 'chip chip-add', 'data-add': g, 'aria-controls': GROUPS[g].wrap }, '+ Your own'));
+  }
+  function toggleChip(g, name) {
+    const k = name.toLowerCase();
+    let on;
+    if (g === 'emo') {
+      const i = ed.data.emotions.findIndex(f => f.name.toLowerCase() === k);
+      if (i >= 0) { ed.data.emotions.splice(i, 1); on = false; } else { ed.data.emotions.push({ name, rating: 50 }); on = true; }
+      renderRatings();
+    } else {
+      const arr = g === 'body' ? ed.data.body : ed.data.behaviours;
+      const i = arr.findIndex(n => n.toLowerCase() === k);
+      if (i >= 0) { arr.splice(i, 1); on = false; } else { arr.push(name); on = true; }
+    }
+    const chip = $$('.chip[data-name]', $('#' + GROUPS[g].box)).find(c => c.dataset.name.toLowerCase() === k);
+    if (chip) chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    updateStepTabs();
+    saveDraftSoon();
+  }
+  function addOwn(g) {
+    const input = $('#' + GROUPS[g].input);
+    const v = input.value.trim().replace(/\s+/g, ' ');
+    if (!v) { input.focus(); return; }
+    if (g === 'emo' && v.split(' ').length > 3 && ed.ownConfirm !== v) { ed.ownConfirm = v; $('#own-hint').hidden = false; return; }
+    const name = v.charAt(0).toUpperCase() + v.slice(1);
+    if (!namesIn(g, ed.data).some(n => n.toLowerCase() === name.toLowerCase())) {
+      if (g === 'emo') ed.data.emotions.push({ name, rating: 50 });
+      else (g === 'body' ? ed.data.body : ed.data.behaviours).push(name);
+    }
+    input.value = '';
+    if (g === 'emo') { ed.ownConfirm = ''; $('#own-hint').hidden = true; renderRatings(); }
+    $('#' + GROUPS[g].wrap).hidden = true;
+    renderChips(g);
+    updateStepTabs();
+    saveDraftSoon();
+  }
+  function moveOwnToThoughts() {
+    const input = $('#own-emo-in'), v = input.value.trim();
+    if (v) { const t = $('#f-thoughts'); t.value = t.value.trim() ? t.value.replace(/\s+$/, '') + '\n' + v : v; }
+    input.value = '';
+    ed.ownConfirm = '';
+    $('#own-hint').hidden = true;
+    $('#own-emo').hidden = true;
+    readFields();
+    updateStepTabs();
+    saveDraftSoon();
+    toast('Added to Thoughts');
+  }
+
+  function paintRange(r) { r.style.setProperty('--v', String(Number(r.value) / 100)); }
+  // A tap or sideways drag anywhere on the bar sets the value (iOS only drags the thumb by default);
+  // a vertical swipe still scrolls the page.
+  function touchRange(r) {
+    let start = null;
+    const setFrom = x => {
+      const rect = r.getBoundingClientRect(), thumb = 30;
+      const p = Math.min(1, Math.max(0, (x - rect.left - thumb / 2) / (rect.width - thumb)));
+      const v = Math.round(p * 20) * 5;
+      if (Number(r.value) !== v) { r.value = String(v); r.dispatchEvent(new Event('input', { bubbles: true })); }
+    };
+    r.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') start = { x: e.clientX, y: e.clientY, id: e.pointerId, drag: false }; });
+    r.addEventListener('pointermove', e => {
+      if (!start || e.pointerId !== start.id) return;
+      const dx = Math.abs(e.clientX - start.x), dy = Math.abs(e.clientY - start.y);
+      if (!start.drag && dx > 6 && dx > dy) { start.drag = true; try { r.setPointerCapture(e.pointerId); } catch (_) { /* not needed */ } }
+      if (start.drag) setFrom(e.clientX);
+    });
+    r.addEventListener('pointerup', e => {
+      if (!start || e.pointerId !== start.id) return;
+      const dx = Math.abs(e.clientX - start.x), dy = Math.abs(e.clientY - start.y);
+      if (start.drag || (dx < 10 && dy < 10)) setFrom(e.clientX);
+      start = null;
+    });
+    r.addEventListener('pointercancel', () => { start = null; });
+  }
+  function renderRatings() {
+    const box = $('#ratings');
+    box.textContent = '';
+    box.hidden = !ed.data.emotions.length;
+    if (box.hidden) return;
+    box.append(el('h3', { class: 'ratings-title' }, 'How strong was each one?'));
+    ed.data.emotions.forEach((f, i) => {
+      const id = 'rate-' + i;
+      const out = el('output', { class: 'rating-val', for: id }, f.rating + '%');
+      const rm = el('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Remove ' + f.name }, icon('x'));
+      rm.addEventListener('click', () => toggleChip('emo', f.name));
+      const range = el('input', { type: 'range', id, class: 'range', min: '0', max: '100', step: '5', value: String(f.rating), 'aria-valuetext': f.rating + '%' });
+      paintRange(range);
+      range.addEventListener('input', () => {
+        f.rating = clampRating(range.value);
+        out.textContent = f.rating + '%';
+        range.setAttribute('aria-valuetext', f.rating + '%');
+        paintRange(range);
+        saveDraftSoon();
+      });
+      touchRange(range);
+      box.append(el('div', { class: 'rating' }, [
+        el('div', { class: 'rating-head' }, [el('label', { class: 'rating-name', for: id }, f.name), out, rm]),
+        range,
+        el('div', { class: 'scale', 'aria-hidden': 'true' }, [el('span', null, '0'), el('span', null, '50'), el('span', null, '100')])
+      ]));
+    });
+  }
+
+  async function cancelEditor() {
+    readFields();
+    if (isDirty()) {
+      const ok = await confirmDialog({
+        title: ed.mode === 'edit' ? 'Discard your changes?' : 'Discard this record?',
+        text: ed.mode === 'edit' ? 'The record goes back to how it was.' : 'What you’ve written so far will be lost.',
+        yes: 'Discard', no: 'Keep editing'
+      });
+      if (!ok) return;
+    }
+    clearDraft();
+    const backTo = ed.mode === 'edit' && findEntry(ed.id) ? 'detail' : 'home';
+    ed.data = null;
+    if (backTo === 'detail') { detailId = ed.id; showView('detail'); } else showView('home');
+  }
+
+  async function commitEditor() {
+    if (ed.saving) return;
+    readFields();
+    const d = ed.data;
+    if (!hasContent(d)) { toast('Write something first, then save.'); return; }
+    const existing = ed.mode === 'edit' ? findEntry(ed.id) : null;
+    const now = Date.now();
+    const when = WHEN_RE.test(d.when) ? d.when.slice(0, 16) : nowLocal();
+    const rec = {
+      id: ed.id, when, ts: parseWhen(when).getTime(),
+      situation: d.situation.trim(), body: tagList(d.body), bodyNote: d.bodyNote.trim(),
+      thoughts: d.thoughts.trim(), emotions: emotionList(d.emotions),
+      behaviours: tagList(d.behaviours), behaviourNote: d.behaviourNote.trim(),
+      created: existing && existing.created ? existing.created : now, updated: now
+    };
+    ed.saving = true;
+    try { await Store.put(rec); }
+    catch (_) {
+      ed.saving = false;
+      toast('Couldn’t save. Your phone may be low on storage. Try again.');
+      return;
+    }
+    ed.saving = false;
+    records.set(rec.id, rec);
+    askPersist();
+    clearDraft();
+    const wasEdit = ed.mode === 'edit';
+    ed.data = null;
+    if (wasEdit) { detailId = rec.id; showView('detail'); }
+    else { showView('home'); flashEntry(rec.id); }
+    toast(Store.mode === 'memory' ? 'Kept until you close the app. Share it to keep a copy.' : (wasEdit ? 'Changes saved' : 'Saved on this ' + deviceName));
+  }
+
+  /* Drafts keep an unfinished record safe if the app is closed mid-way. */
+  let draftTimer = 0;
+  function saveDraftSoon() { clearTimeout(draftTimer); draftTimer = setTimeout(saveDraftNow, 350); }
+  function saveDraftNow() {
+    clearTimeout(draftTimer);
+    if (state.view !== 'editor' || !ed.data) return;
+    readFields();
+    if (!isDirty()) { ls.del(KEYS.draft); return; }
+    ls.set(KEYS.draft, { mode: ed.mode, id: ed.id, step: ed.step, data: ed.data, initial: ed.initial, at: Date.now() });
+  }
+  function clearDraft() { clearTimeout(draftTimer); ls.del(KEYS.draft); }
+  function getDraft() {
+    if (state.view === 'editor') return null;
+    const d = ls.get(KEYS.draft);
+    return d && d.data && typeof d.id === 'string' ? d : null;
+  }
+
+  /* ---------- Detail ---------- */
+  function openDetail(id) { detailId = id; $('#dt-fallback').hidden = true; showView('detail'); }
+  function partSection(label, step, content) {
+    const s = el('section', { class: 'dt-sec' }, el('h2', { class: 'sec-label' }, label));
+    if (content) { s.append(content); return s; }
+    const b = el('button', { type: 'button', class: 'inline-link' }, 'Add ' + label.toLowerCase());
+    b.addEventListener('click', () => { const e = findEntry(detailId); if (e) { openEditor(e); goStep(step); } });
+    s.append(el('p', { class: 'empty-part' }, ['Not filled in. ', b]));
+    return s;
+  }
+  function tagBlock(tags, note) {
+    if (!tags.length && !note) return null;
+    return el('div', null, [
+      tags.length ? el('div', { class: 'tags' }, tags.map(t => el('span', { class: 'tag' }, t))) : null,
+      note ? el('p', { class: 'dt-text serif' + (tags.length ? ' tag-note' : '') }, note) : null
+    ]);
+  }
+  function renderDetail() {
+    const e = findEntry(detailId);
+    const box = $('#dt-body');
+    box.textContent = '';
+    if (!e) { if (state.view === 'detail') showView('home'); return; }
+    box.append(el('p', { class: 'dt-date' }, fmtLongDate(e.when)), el('p', { class: 'dt-time' }, fmtTime(parseWhen(e.when))));
+    box.append(partSection('Situation', 0, e.situation ? el('p', { class: 'dt-text serif' }, e.situation) : null));
+    box.append(partSection('Physical feelings', 1, tagBlock(e.body, e.bodyNote)));
+    box.append(partSection('Thoughts', 2, e.thoughts ? el('div', { class: 'bubble bubble-read' }, el('p', { class: 'dt-text serif thought' }, e.thoughts)) : null));
+    box.append(partSection('Emotions', 3, e.emotions.length ? el('ul', { class: 'meters' }, e.emotions.map(f => el('li', { class: 'meter-row', style: '--v:' + (f.rating / 100) }, [
+      el('span', { class: 'meter-name' }, f.name), el('span', { class: 'meter-val' }, f.rating + '%'), el('span', { class: 'meter', 'aria-hidden': 'true' }, el('span'))
+    ]))) : null));
+    box.append(partSection('Behaviours', 4, tagBlock(e.behaviours, e.behaviourNote)));
+  }
+
+  /* ---------- Text, sharing and PDF ---------- */
+  function recordText(e) {
+    return [
+      fmtLong(e.when),
+      'Situation: ' + (e.situation || '–'),
+      'Physical feelings: ' + (tagsText(e.body, e.bodyNote) || '–'),
+      'Thoughts: ' + (e.thoughts || '–'),
+      'Emotions: ' + (emotionsText(e) || '–'),
+      'Behaviours: ' + (tagsText(e.behaviours, e.behaviourNote) || '–')
+    ].join('\n');
+  }
+  const summaryText = (list, label) => 'Thought record\n' + label + ' · ' + plural(list.length, 'record') + '\n\n' + list.map(recordText).join('\n\n') + '\n';
+
+  async function copyText(text) {
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(text); return true; } } catch (_) { /* try the older way */ }
+    try {
+      const ta = el('textarea', { readonly: true, style: 'position:fixed;top:0;left:0;opacity:0;font-size:16px' });
+      ta.value = text;
+      document.body.append(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      ta.remove();
+      if (ok) return true;
+    } catch (_) { /* fall through */ }
+    return false;
+  }
+  // Opens the iPhone share sheet (Mail, Messages, Notes, Copy); falls back to copying.
+  async function shareText(title, text, fallback) {
+    if (navigator.share) {
+      try { await navigator.share({ title, text }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    if (await copyText(text)) { fallback.hidden = true; toast('Copied. Paste it into an email, message or note.'); return; }
+    fallback.value = text;
+    fallback.hidden = false;
+    autosize(fallback);
+    fallback.focus();
+    toast('Press and hold the text below to copy it.');
+  }
+  // Must run straight from a tap: iOS only opens the share sheet in response to one.
+  function shareFile(blob, name, title) {
+    const file = new File([blob], name, { type: blob.type });
+    if (navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
+      return navigator.share({ files: [file], title }).then(() => true, e => {
+        if (e && e.name === 'AbortError') return false;
+        return downloadFile(blob, name);
+      });
+    }
+    return Promise.resolve(downloadFile(blob, name));
+  }
+  function downloadFile(blob, name) {
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = el('a', { href: url, download: name });
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      return true;
+    } catch (_) { return false; }
+  }
+
+  function loadScript(src) {
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => res();
+      s.onerror = () => { s.remove(); rej(new Error('Could not load ' + src)); };
+      document.head.append(s);
+    });
+  }
+  let pdfPromise = null;
+  const pdfLoaded = () => !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+  function ensurePdf() {
+    if (pdfLoaded()) return Promise.resolve();
+    if (!pdfPromise) {
+      pdfPromise = (async () => {
+        if (!(window.jspdf && window.jspdf.jsPDF)) await loadScript(PDF_FILES[0]);
+        await loadScript(PDF_FILES[1]);
+        if (!pdfLoaded()) throw new Error('PDF table plugin missing');
+      })().catch(e => { pdfPromise = null; throw e; });
+    }
+    return pdfPromise;
+  }
+  // The PDF's built-in font covers Western European text and typographic quotes; emoji and other symbols are dropped.
+  function pdfSafe(s) {
+    return String(s || '')
+      .replace(/[^\t\n\r\x20-\x7E -ÿŒœŠšŸŽžƒˆ˜–—‘-‚“-„†-•…‰‹›€™]/g, '')
+      .replace(/[ \t]{2,}/g, ' ');
+  }
+  function buildPdf(list, label) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(22, 33, 44);
+    doc.text('Thought record', 36, 44);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.setTextColor(86, 99, 111);
+    doc.text(pdfSafe(label + '  ·  ' + plural(list.length, 'record')), 36, 61);
+    const dash = s => pdfSafe(s) || '–';
+    const body = list.map(e => {
+      const d = parseWhen(e.when);
+      return [
+        dayMonth(d) + '\n' + fmtTime(d),
+        dash(e.situation),
+        dash(e.body.join('\n') + (e.bodyNote ? (e.body.length ? '\n' : '') + e.bodyNote : '')),
+        dash(e.thoughts),
+        dash(e.emotions.map(f => f.name + ' ' + f.rating + '%').join('\n')),
+        dash(e.behaviours.join('\n') + (e.behaviourNote ? (e.behaviours.length ? '\n' : '') + e.behaviourNote : ''))
+      ];
+    });
+    doc.autoTable({
+      startY: 76,
+      head: [['When', 'Situation', 'Physical feelings', 'Thoughts', 'Emotions (0–100%)', 'Behaviours']],
+      body,
+      theme: 'grid',
+      margin: { top: 36, right: 36, bottom: 42, left: 36 },
+      styles: { font: 'helvetica', fontSize: 9.5, cellPadding: 6, valign: 'top', overflow: 'linebreak', textColor: [22, 33, 44], lineColor: [214, 221, 227], lineWidth: 0.6 },
+      headStyles: { fillColor: [28, 106, 109], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
+      alternateRowStyles: { fillColor: [246, 248, 249] },
+      columnStyles: { 0: { cellWidth: 62 }, 2: { cellWidth: 112 }, 4: { cellWidth: 112 } },
+      didDrawPage: data => {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 130, 140);
+        doc.text('Page ' + data.pageNumber, W - 36, H - 20, { align: 'right' });
+      }
+    });
+    return doc.output('blob');
+  }
+
+  /* ---------- Session summary ---------- */
+  let sumDays = 7;
+  const sumList = () => allEntries().filter(e => inRange(e, sumDays)).sort((a, b) => a.ts - b.ts);
+  function sumBounds(list) {
+    const today = new Date();
+    if (sumDays) return { start: rangeStart(sumDays), end: today };
+    if (!list.length) return { start: today, end: today };
+    const last = parseWhen(list[list.length - 1].when);
+    return { start: parseWhen(list[0].when), end: last > today ? last : today };
+  }
+  function snippet(e) {
+    const s = (e.situation || e.thoughts || emotionsText(e) || tagsText(e.body, e.bodyNote)).replace(/\s+/g, ' ');
+    return s.length > 72 ? s.slice(0, 70).trimEnd() + '…' : s;
+  }
+  function topTags(list, field) {
+    const m = new Map();
+    for (const e of list) for (const t of e[field]) m.set(t, (m.get(t) || 0) + 1);
+    return Array.from(m).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  }
+  function renderSummary() {
+    for (const b of $$('#sum-seg button')) b.setAttribute('aria-pressed', String(Number(b.dataset.days) === sumDays));
+    const list = sumList();
+    const { start, end } = sumBounds(list);
+    const box = $('#sum-body');
+    box.textContent = '';
+    box.append(el('p', { class: 'sum-range' }, fmtRange(start, end)));
+    if (!list.length) {
+      box.append(el('p', { class: 'list-note' }, 'No records in this period yet.'));
+    } else {
+      const counts = new Map();
+      for (const e of list) for (const f of e.emotions) {
+        const c = counts.get(f.name) || { n: 0, sum: 0 };
+        c.n++; c.sum += f.rating;
+        counts.set(f.name, c);
+      }
+      const topEmo = Array.from(counts).sort((a, b) => (b[1].n - a[1].n) || (b[1].sum - a[1].sum)).slice(0, 3);
+      const topBody = topTags(list, 'body'), topBeh = topTags(list, 'behaviours');
+      const tagLines = pairs => el('ul', { class: 'sum-top' }, pairs.map(([t, n]) => el('li', null, [el('span', null, t), el('span', { class: 'sum-n' }, n === 1 ? 'once' : n + ' times')])));
+      box.append(el('div', { class: 'sum-stats' }, [
+        el('div', { class: 'sum-count' }, [el('span', { class: 'sum-big' }, String(list.length)), el('span', { class: 'sum-unit' }, list.length === 1 ? 'record' : 'records')]),
+        el('div', null, [
+          topEmo.length ? [el('span', { class: 'sum-k' }, 'Emotions felt most often'), el('ul', { class: 'sum-top' }, topEmo.map(([name, c]) => el('li', null, [
+            el('span', null, name),
+            el('span', { class: 'sum-n' }, c.n === 1 ? Math.round(c.sum) + '%' : c.n + ' times · avg ' + Math.round(c.sum / c.n) + '%')])))] : null,
+          topBody.length ? [el('span', { class: 'sum-k' }, 'Physical feelings'), tagLines(topBody)] : null,
+          topBeh.length ? [el('span', { class: 'sum-k' }, 'Behaviours'), tagLines(topBeh)] : null
+        ])
+      ]));
+      box.append(el('ol', { class: 'sum-list' }, list.map(e => el('li', null, [el('span', { class: 'sum-when' }, fmtShort(e.when)), el('span', { class: 'sum-snip' }, snippet(e))]))));
+    }
+    $('#sum-text').disabled = !list.length;
+    $('#sum-pdf').disabled = !list.length || !pdfLoaded();
+    $('#sum-pdf').textContent = pdfLoaded() ? 'Share as PDF' : 'Preparing PDF…';
+  }
+  function openSummary() {
+    $('#sum-fallback').hidden = true;
+    $('#sum-overlay').hidden = false;
+    document.body.classList.add('locked');
+    renderSummary();
+    $('#sum-title').focus();
+    ensurePdf().then(renderSummary, () => { $('#sum-pdf').textContent = 'PDF not available'; });
+  }
+  function closeSummary() {
+    $('#sum-overlay').hidden = true;
+    document.body.classList.remove('locked');
+    $('#btn-summary').focus();
+  }
+  function sharePdf() {
+    const list = sumList();
+    if (!list.length || !pdfLoaded()) return;
+    const { start, end } = sumBounds(list);
+    let blob;
+    try { blob = buildPdf(list, fmtRange(start, end)); }
+    catch (_) { toast('Couldn’t make the PDF. Share as text instead.'); return; }
+    shareFile(blob, 'Thought record ' + isoDay(start) + ' to ' + isoDay(end) + '.pdf', 'Thought record').then(ok => {
+      if (!ok) return;
+      if (!(navigator.canShare && navigator.share)) toast('PDF saved');
+    });
+  }
+
+  /* ---------- Backup and restore ---------- */
+  function backup() {
+    const list = allEntries().slice().sort((a, b) => a.ts - b.ts);
+    if (!list.length) return;
+    const payload = { app: 'thought-record', format: 1, exported: new Date().toISOString(), records: list };
+    const blob = new Blob([JSON.stringify(payload, null, 1)], { type: 'application/json' });
+    shareFile(blob, 'thought-record-backup-' + isoDay(new Date()) + '.json', 'Thought record backup').then(ok => {
+      if (!ok) return;
+      ls.set(KEYS.backup, Date.now());
+      render();
+      toast('Backup made. Keep it somewhere safe, like Files.');
+    });
+  }
+  async function restoreFrom(file) {
+    let data;
+    try { data = JSON.parse(await file.text()); } catch (_) { toast('That file isn’t a Thought Record backup.'); return; }
+    const list = Array.isArray(data) ? data : data && Array.isArray(data.records) ? data.records : null;
+    if (!list) { toast('That file isn’t a Thought Record backup.'); return; }
+    const incoming = list.map(normalize).filter(Boolean);
+    const fresh = incoming.filter(r => { const cur = records.get(r.id); return !cur || (r.updated || 0) > (cur.updated || 0); });
+    if (!fresh.length) { toast('Everything in that backup is already here.'); return; }
+    const ok = await confirmDialog({
+      title: 'Restore ' + plural(fresh.length, 'record') + '?',
+      text: 'They’ll be added to the records on this ' + deviceName + '. Nothing will be deleted.',
+      yes: 'Restore', no: 'Cancel', danger: false
+    });
+    if (!ok) return;
+    try { await Store.putMany(fresh); }
+    catch (_) { toast('Couldn’t restore. Your phone may be low on storage.'); return; }
+    fresh.forEach(r => records.set(r.id, r));
+    askPersist();
+    render();
+    toast('Restored ' + plural(fresh.length, 'record'));
+  }
+
+  /* ---------- Dialog and toast ---------- */
+  function confirmDialog(o) {
+    return new Promise(resolve => {
+      const ov = $('#cf-overlay'), yes = $('#cf-yes'), no = $('#cf-no');
+      $('#cf-title').textContent = o.title;
+      $('#cf-text').textContent = o.text;
+      yes.textContent = o.yes;
+      no.textContent = o.no;
+      yes.className = 'btn ' + (o.danger === false ? 'btn-primary' : 'btn-danger');
+      const prev = document.activeElement;
+      ov.hidden = false;
+      no.focus();
+      const done = v => {
+        ov.hidden = true;
+        yes.removeEventListener('click', onYes); no.removeEventListener('click', onNo);
+        ov.removeEventListener('click', onBg); document.removeEventListener('keydown', onKey, true);
+        if (prev && prev.focus) prev.focus();
+        resolve(v);
+      };
+      const onYes = () => done(true), onNo = () => done(false);
+      const onBg = e => { if (e.target === ov) done(false); };
+      const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } };
+      yes.addEventListener('click', onYes); no.addEventListener('click', onNo);
+      ov.addEventListener('click', onBg); document.addEventListener('keydown', onKey, true);
+    });
+  }
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  /* ---------- Wiring ---------- */
+  $('#btn-new').addEventListener('click', () => {
+    const dr = getDraft();
+    if (dr && dr.mode === 'new') { openEditor(null, dr); toast('Picked up where you left off'); }
+    else openEditor(null);
+  });
+  $('#btn-summary').addEventListener('click', openSummary);
+  $('#list').addEventListener('click', e => { const b = e.target.closest('button.entry'); if (b) openDetail(b.dataset.id); });
+  $('#draft-continue').addEventListener('click', () => { const dr = getDraft(); if (dr) openEditor(null, dr); });
+  $('#draft-discard').addEventListener('click', async () => {
+    const ok = await confirmDialog({ title: 'Discard the unfinished record?', text: 'What you wrote will be lost.', yes: 'Discard', no: 'Keep it' });
+    if (ok) { clearDraft(); render(); }
+  });
+  $('#backup-now').addEventListener('click', backup);
+  $('#btn-backup').addEventListener('click', backup);
+  $('#btn-restore').addEventListener('click', () => $('#restore-input').click());
+  $('#restore-input').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (f) restoreFrom(f);
+  });
+
+  $('#ed-cancel').addEventListener('click', cancelEditor);
+  $('#ed-save-top').addEventListener('click', commitEditor);
+  $('#ed-back').addEventListener('click', () => goStep(Math.max(0, ed.step - 1)));
+  $('#ed-next').addEventListener('click', () => { if (ed.step < 4) goStep(ed.step + 1); else commitEditor(); });
+  for (const b of $$('.step')) b.addEventListener('click', () => goStep(Number(b.dataset.step)));
+  for (const g of Object.keys(GROUPS)) {
+    $('#' + GROUPS[g].box).addEventListener('click', e => {
+      const c = e.target.closest('.chip');
+      if (!c) return;
+      if (c.dataset.add) { $('#' + GROUPS[g].wrap).hidden = false; $('#' + GROUPS[g].input).focus(); return; }
+      toggleChip(g, c.dataset.name);
+    });
+    $('#' + GROUPS[g].input).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addOwn(g); } });
+  }
+  for (const b of $$('[data-add-own]')) b.addEventListener('click', () => addOwn(b.dataset.addOwn));
+  $('#own-emo-in').addEventListener('input', () => { if (ed.ownConfirm && $('#own-emo-in').value.trim() !== ed.ownConfirm) { ed.ownConfirm = ''; $('#own-hint').hidden = true; } });
+  $('#own-move').addEventListener('click', moveOwnToThoughts);
+  for (const t of $$('#editor textarea')) t.addEventListener('input', () => { autosize(t); readFields(); updateStepTabs(); saveDraftSoon(); });
+  $('#f-when').addEventListener('change', () => { readFields(); saveDraftSoon(); });
+
+  $('#dt-back').addEventListener('click', () => showView('home'));
+  $('#dt-edit').addEventListener('click', () => { const e = findEntry(detailId); if (e) openEditor(e); });
+  $('#dt-share').addEventListener('click', () => { const e = findEntry(detailId); if (e) shareText('Thought record', recordText(e), $('#dt-fallback')); });
+  $('#dt-delete').addEventListener('click', async () => {
+    const ok = await confirmDialog({ title: 'Delete this record?', text: 'This can’t be undone.', yes: 'Delete', no: 'Cancel' });
+    if (!ok) return;
+    const id = detailId;
+    try { await Store.remove(id); } catch (_) { toast('Couldn’t delete that record. Try again.'); return; }
+    records.delete(id);
+    showView('home');
+    toast('Record deleted');
+  });
+
+  $('#sum-close').addEventListener('click', closeSummary);
+  $('#sum-overlay').addEventListener('click', e => { if (e.target === $('#sum-overlay')) closeSummary(); });
+  $('#sum-seg').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    sumDays = Number(b.dataset.days);
+    $('#sum-fallback').hidden = true;
+    renderSummary();
+  });
+  $('#sum-pdf').addEventListener('click', sharePdf);
+  $('#sum-text').addEventListener('click', () => {
+    const list = sumList();
+    if (!list.length) return;
+    const { start, end } = sumBounds(list);
+    shareText('Thought record', summaryText(list, fmtRange(start, end)), $('#sum-fallback'));
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#sum-overlay').hidden && $('#cf-overlay').hidden) closeSummary(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveDraftNow(); });
+  window.addEventListener('pagehide', saveDraftNow);
+
+  /* ---------- Start ---------- */
+  async function boot() {
+    render();
+    await Store.init();
+    try {
+      for (const raw of await Store.all()) { const r = normalize(raw); if (r) records.set(r.id, r); }
+    } catch (_) { loadFailed = true; }
+    ready = true;
+    render();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => navigator.serviceWorker.ready)
+        .then(() => { offlineReady = true; render(); })
+        .catch(() => { /* offline support unavailable here */ });
+    }
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
